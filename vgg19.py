@@ -13,7 +13,7 @@ import warnings
 
 from keras.models import Model
 from keras.layers import Flatten, Dense, Input
-from keras.layers import Convolution2D, MaxPooling2D
+from keras.layers import Convolution2D, MaxPooling2D, GlobalAveragePooling2D
 from keras.preprocessing import image
 from keras.utils.layer_utils import convert_all_kernels_in_model
 from keras.utils.data_utils import get_file
@@ -27,7 +27,7 @@ TH_WEIGHTS_PATH_NO_TOP = 'https://github.com/fchollet/deep-learning-models/relea
 TF_WEIGHTS_PATH_NO_TOP = 'https://github.com/fchollet/deep-learning-models/releases/download/v0.1/vgg19_weights_tf_dim_ordering_tf_kernels_notop.h5'
 
 
-def VGG19(include_top=True, weights='imagenet',
+def VGG19(include_top=True, weights='imagenet', global_avg_pooling=False,
           input_tensor=None):
     '''Instantiate the VGG19 architecture,
     optionally loading weights pre-trained
@@ -104,7 +104,12 @@ def VGG19(include_top=True, weights='imagenet',
     x = Convolution2D(512, 3, 3, activation='relu', border_mode='same', name='block5_conv2')(x)
     x = Convolution2D(512, 3, 3, activation='relu', border_mode='same', name='block5_conv3')(x)
     x = Convolution2D(512, 3, 3, activation='relu', border_mode='same', name='block5_conv4')(x)
-    x = MaxPooling2D((2, 2), strides=(2, 2), name='block5_pool')(x)
+
+    if global_avg_pooling:
+        assert not include_top, "include_top cannot be set with global_avg_pooling"
+        x = GlobalAveragePooling2D(name='block5_global_avg_pool')(x)
+    else:
+        x = MaxPooling2D((2, 2), strides=(2, 2), name='block5_pool')(x)
 
     if include_top:
         # Classification block
